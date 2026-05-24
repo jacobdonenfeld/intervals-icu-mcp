@@ -36,10 +36,12 @@ export const GetEventsInputSchema = z.object({
 export type GetEventsInput = z.infer<typeof GetEventsInputSchema>;
 
 export const getEvents = (server: McpServer) =>
-  server.tool(
+  server.registerTool(
     "getEvents",
-    "Get a list of events for an athlete from Intervals.icu.",
-    GetEventsInputSchema.shape,
+    {
+      description: "Get a list of events for an athlete from Intervals.icu.",
+      inputSchema: GetEventsInputSchema.shape,
+    },
     async ({
       athlete_id,
       start_date,

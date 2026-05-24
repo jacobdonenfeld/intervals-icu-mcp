@@ -27,7 +27,9 @@ client.setConfig({
     if (auth.scheme === "basic") {
       return `${"API_KEY"}:${apiKey}`;
     }
-    return apiKey;
+    // The openapi spec specifes both basic and bearer auth. We return undefined when not using
+    // basic auth, ensuring only the correct auth is used.
+    return undefined;
   },
   headers: {
     "User-Agent": "intervals-icu-mcp/1.0",

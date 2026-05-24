@@ -4,6 +4,8 @@ import { z } from "zod";
 import { listActivities } from "../client/generated/sdk.gen";
 import { formatActivitySummary } from "../utils/formatting";
 
+const includeOtherActivityFields = process.env.DEBUG_UNKNOWN_FIELDS === "true";
+
 export const GetActivitiesInputSchema = z.object({
   athlete_id: z
     .string()
@@ -38,10 +40,13 @@ export const GetActivitiesInputSchema = z.object({
 export type GetActivitiesInput = z.infer<typeof GetActivitiesInputSchema>;
 
 export const getActivities = (server: McpServer) =>
-  server.tool(
+  server.registerTool(
     "getActivities",
-    "Get a list of activities for an athlete from Intervals.icu.",
-    GetActivitiesInputSchema.shape,
+    {
+      description:
+        "Get a list of activities for an athlete from Intervals.icu.",
+      inputSchema: GetActivitiesInputSchema.shape,
+    },
     async ({
       athlete_id,
       start_date,
@@ -92,10 +97,12 @@ export const getActivities = (server: McpServer) =>
         activities
           .map((activity) =>
             typeof activity === "object"
-              ? formatActivitySummary(activity)
-              : `Invalid activity format: ${activity}\n\n`
+              ? formatActivitySummary(activity, {
+                  includeOtherFields: includeOtherActivityFields,
+                })
+              : `Invalid activity format: ${activity}`
           )
-          .join("\n");
+          .join("\n\n");
       return {
         content: [
           {

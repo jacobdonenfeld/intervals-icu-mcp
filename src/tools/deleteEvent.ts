@@ -28,10 +28,12 @@ export const DeleteEventInputSchema = z.object({
 export type DeleteEventInput = z.infer<typeof DeleteEventInputSchema>;
 
 export const deleteEvent = (server: McpServer) =>
-  server.tool(
+  server.registerTool(
     "deleteEvent",
-    "Delete an event for the current athlete by event ID.",
-    DeleteEventInputSchema.shape,
+    {
+      description: "Delete an event for the current athlete by event ID.",
+      inputSchema: DeleteEventInputSchema.shape,
+    },
     async (input: DeleteEventInput) => {
       const athleteId = input.athlete_id || process.env.INTERVALS_ATHLETE_ID;
       if (!athleteId) {

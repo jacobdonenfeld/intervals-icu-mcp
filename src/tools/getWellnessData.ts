@@ -27,10 +27,12 @@ export const GetWellnessDataInputSchema = z.object({
 export type GetWellnessDataInput = z.infer<typeof GetWellnessDataInputSchema>;
 
 export const getWellnessData = (server: McpServer) =>
-  server.tool(
+  server.registerTool(
     "getWellnessData",
-    "Get wellness data for an athlete from Intervals.icu.",
-    GetWellnessDataInputSchema.shape,
+    {
+      description: "Get wellness data for an athlete from Intervals.icu.",
+      inputSchema: GetWellnessDataInputSchema.shape,
+    },
     async ({ athlete_id, start_date, end_date }: GetWellnessDataInput) => {
       const athleteId = athlete_id || process.env.INTERVALS_ATHLETE_ID;
       if (!athleteId) {

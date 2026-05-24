@@ -17,10 +17,12 @@ export type GetAthleteDetailsInput = z.infer<
 >;
 
 export const getAthleteDetails = (server: McpServer) =>
-  server.tool(
+  server.registerTool(
     "getAthleteDetails",
-    "Get athlete details.",
-    GetAthleteDetailsInputSchema.shape,
+    {
+      description: "Get athlete details.",
+      inputSchema: GetAthleteDetailsInputSchema.shape,
+    },
     async ({ athlete_id }: GetAthleteDetailsInput) => {
       const athleteId = athlete_id || process.env.INTERVALS_ATHLETE_ID;
       if (!athleteId) {

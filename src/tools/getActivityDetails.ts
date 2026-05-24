@@ -12,6 +12,8 @@ import {
   formatIntervalsTable,
 } from "../utils/formatting";
 
+const includeOtherActivityFields = process.env.DEBUG_UNKNOWN_FIELDS === "true";
+
 export const GetActivityDetailsInputSchema = z.object({
   activity_id: z.string().describe("The Intervals.icu activity ID (required)"),
   intervals: z
@@ -27,11 +29,32 @@ export type GetActivityDetailsInput = z.infer<
 
 type ActivityResult = Activity | ActivityWithIntervals | Hidden;
 
+const isStravaActivity = (activity: ActivityResult) =>
+  "source" in activity && activity.source === "STRAVA";
+
+const isStravaApiRestriction = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "response" in error &&
+  typeof error.response === "object" &&
+  error.response !== null &&
+  "status" in error.response &&
+  error.response.status === 422 &&
+  "data" in error.response &&
+  typeof error.response.data === "object" &&
+  error.response.data !== null &&
+  "error" in error.response.data &&
+  typeof error.response.data.error === "string" &&
+  error.response.data.error.includes("Cannot read Strava activities");
+
 export const getActivityDetails = (server: McpServer) =>
-  server.tool(
+  server.registerTool(
     "getActivityDetails",
-    "Get detailed information for a specific activity from Intervals.icu.",
-    GetActivityDetailsInputSchema.shape,
+    {
+      description:
+        "Get detailed information for a specific activity from Intervals.icu.",
+      inputSchema: GetActivityDetailsInputSchema.shape,
+    },
     async ({ activity_id, intervals = true }: GetActivityDetailsInput) => {
       if (!activity_id) {
         throw new Error("activity_id is required");
@@ -62,7 +85,9 @@ export const getActivityDetails = (server: McpServer) =>
         };
       }
       // Format the detailed view
-      let detailed_view = formatActivitySummary(result);
+      let detailed_view = formatActivitySummary(result, {
+        includeOtherFields: includeOtherActivityFields,
+      });
 
       // Add zones if available (non-standard, so check for property existence)
       if (
@@ -90,12 +115,25 @@ export const getActivityDetails = (server: McpServer) =>
 
       // Fetch and append intervals if requested
       if (intervals) {
-        const intervalsResponse = await getIntervals({
-          path: { id: activity_id },
-        });
-        if (intervalsResponse && intervalsResponse.data) {
+        if (isStravaActivity(result)) {
           detailed_view +=
-            "\n\n" + formatIntervalsTable(intervalsResponse.data);
+            "\n\nIntervals unavailable: Intervals.icu does not allow reading Strava activities via the API.";
+        } else {
+          try {
+            const intervalsResponse = await getIntervals({
+              path: { id: activity_id },
+            });
+            if (intervalsResponse && intervalsResponse.data) {
+              detailed_view +=
+                "\n\n" + formatIntervalsTable(intervalsResponse.data);
+            }
+          } catch (error) {
+            if (!isStravaApiRestriction(error)) {
+              throw error;
+            }
+            detailed_view +=
+              "\n\nIntervals unavailable: Intervals.icu does not allow reading Strava activities via the API.";
+          }
         }
       }
 

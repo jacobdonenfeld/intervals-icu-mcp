@@ -26,10 +26,13 @@ export const CreateBulkEventsInputSchema = z.object({
 export type CreateBulkEventsInput = z.infer<typeof CreateBulkEventsInputSchema>;
 
 export const createBulkEvents = (server: McpServer) =>
-  server.tool(
+  server.registerTool(
     "createBulkEvents",
-    "Create multiple events for the current athlete in bulk. Uses the same schema as createEvent for each event.",
-    CreateBulkEventsInputSchema.shape,
+    {
+      description:
+        "Create multiple events for the current athlete in bulk. Uses the same schema as createEvent for each event.",
+      inputSchema: CreateBulkEventsInputSchema.shape,
+    },
     async (input: CreateBulkEventsInput) => {
       const athleteId = input.athlete_id || process.env.INTERVALS_ATHLETE_ID;
       if (!athleteId) {
@@ -46,8 +49,11 @@ export const createBulkEvents = (server: McpServer) =>
       const response = await createMultipleEvents({
         path: { id: athleteId },
         body: events,
-        query:
-          input.upsert !== undefined ? { upsert: input.upsert } : undefined,
+        query: {
+          ...(input.upsert !== undefined ? { upsert: input.upsert } : {}),
+          upsertOnUid: false,
+          updatePlanApplied: false,
+        },
       });
       if (!response.data || !Array.isArray(response.data)) {
         return {
