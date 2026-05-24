@@ -22,7 +22,7 @@ If you prefer not to use MCP, there's also a [ChatGPT connector for Intervals.ic
 
 ## Requirements
 
-- **Node.js** 22.x or higher
+- **Node.js** 22.13.0 or higher
 - **Claude Desktop** with MCP support
 - **Intervals.icu Account** with API access
 - **API Key** from Intervals.icu
@@ -56,9 +56,11 @@ cp .env.example .env
 Then edit the `.env` file with your actual values:
 
 ```env
+INTERVALS_API_BASE_URL=https://intervals.icu
 INTERVALS_API_KEY=your_api_key_here
 INTERVALS_ATHLETE_ID=your_athlete_id_here
 DEBUG=false
+DEBUG_UNKNOWN_FIELDS=false
 ```
 
 **Getting your API credentials:**
@@ -149,6 +151,9 @@ npm run inspector
 # Generate TypeScript client from OpenAPI spec
 npm run generate-client
 
+# Run live API smoke tests
+RUN_INTERVALS_LIVE_TESTS=true npm run test:live
+
 # Linting and formatting
 npm run lint
 npm run lint:fix
@@ -167,17 +172,24 @@ src/
 
 ### API Client Generation
 
-The project uses [@hey-api/openapi-ts](https://github.com/hey-api/openapi-ts) to generate a TypeScript client from the Intervals.icu OpenAPI specification:
+The project uses [@hey-api/openapi-ts](https://github.com/hey-api/openapi-ts) to generate a TypeScript client from the [Intervals.icu OpenAPI specification](https://intervals.icu/api-docs.html).
 
 ```bash
 npm run generate-client
 ```
 
 This generates the client in `src/client/generated/` based on the `openapi-spec.json` file. The entire API is currently available, but only certain tools have been added so far.
+Generated files are formatted by the generator and ignored by the main lint command.
+
+### Live API Test
+
+`npm run test:live` exercises the configured Intervals.icu account. It requires `RUN_INTERVALS_LIVE_TESTS=true`, creates temporary future events, and deletes them before exiting.
 
 ### Debugging
 
 Enable debug mode by setting `DEBUG=true` in your environment variables. This will provide detailed logging of server operations.
+
+Set `DEBUG_UNKNOWN_FIELDS=true` to append unformatted activity fields under `Other Fields` in `getActivities` and `getActivityDetails`.
 
 Use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) for testing and debugging:
 
@@ -198,7 +210,7 @@ npm run inspector
    - Ensure the API key is correctly set in your environment variables
 
 3. **Build errors**
-   - Make sure you're using Node.js 22.x or higher
+   - Make sure you're using Node.js 22.13.0 or higher
    - Run `npm install` to ensure all dependencies are installed
 
 ## License

@@ -6,7 +6,7 @@ import pluginImport from "eslint-plugin-import";
 
 export default tseslint.config(
   {
-    ignores: ["node_modules/**", "dist/**", "src/client/generated"],
+    ignores: ["node_modules/**", "dist/**", "src/client/generated/**"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

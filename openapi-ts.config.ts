@@ -3,9 +3,8 @@ import { defineConfig } from "@hey-api/openapi-ts";
 export default defineConfig({
   input: "./openapi-spec.json",
   output: {
-    format: "prettier",
-    lint: "eslint",
     path: "./src/client/generated",
+    postProcess: ["prettier"],
   },
   plugins: [
     "@hey-api/client-axios",

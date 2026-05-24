@@ -34,10 +34,13 @@ export const DeleteBulkEventsInputSchema = z.object({
 export type DeleteBulkEventsInput = z.infer<typeof DeleteBulkEventsInputSchema>;
 
 export const deleteBulkEvents = (server: McpServer) =>
-  server.tool(
+  server.registerTool(
     "deleteBulkEvents",
-    "Delete multiple events from the athlete's calendar by id or external_id.",
-    DeleteBulkEventsInputSchema.shape,
+    {
+      description:
+        "Delete multiple events from the athlete's calendar by id or external_id.",
+      inputSchema: DeleteBulkEventsInputSchema.shape,
+    },
     async (input: DeleteBulkEventsInput) => {
       const athleteId = input.athlete_id || process.env.INTERVALS_ATHLETE_ID;
       if (!athleteId) {

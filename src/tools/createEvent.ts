@@ -131,10 +131,13 @@ export const CreateEventInputSchema = z.object({
 export type CreateEventInput = z.infer<typeof CreateEventInputSchema>;
 
 export const createEvent = (server: McpServer) =>
-  server.tool(
+  server.registerTool(
     "createEvent",
-    "Create an event for the current athlete, optionally including intervals in the Native Intervals.icu Workout Format.",
-    CreateEventInputSchema.shape,
+    {
+      description:
+        "Create an event for the current athlete, optionally including intervals in the Native Intervals.icu Workout Format.",
+      inputSchema: CreateEventInputSchema.shape,
+    },
     async (input: CreateEventInput) => {
       const athleteId = input.athlete_id || process.env.INTERVALS_ATHLETE_ID;
       if (!athleteId) {
@@ -162,6 +165,7 @@ export const createEvent = (server: McpServer) =>
       const response = await createEventApi({
         path: { id: athleteId },
         body: event,
+        query: { upsertOnUid: false },
       });
       const result = response.data;
       if (!result || typeof result !== "object") {

@@ -4,6 +4,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "ES2022", // Target modern Node.js versions
+    "types": ["node"],
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
